@@ -96,7 +96,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadStored = <T,>(key: string, fallback: T): T => {
     const saved = localStorage.getItem(key);
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+      try {
+        let cleaned = saved;
+        if (/dermatol|derma/i.test(cleaned)) {
+          cleaned = cleaned
+            .replace(/Dermatology/gi, 'Cosmetology')
+            .replace(/Dermatologist/gi, 'Cosmetologist')
+            .replace(/Dermatological/gi, 'Cosmetological')
+            .replace(/DermaCare/g, 'CosmoCare')
+            .replace(/Cipla Derma/g, 'Cipla Cosmo');
+          localStorage.setItem(key, cleaned);
+        }
+        return JSON.parse(cleaned);
+      } catch (e) { /* fallback */ }
     }
     return fallback;
   };

@@ -70,7 +70,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onC
               {settings.clinicName}
             </h1>
             <p className="text-xs font-semibold text-[#C98A7D] uppercase tracking-wider mt-0.5">
-              {settings.tagline}
+              {(settings.tagline || 'Advanced Cosmetology, Laser & Aesthetic Care').replace(/Dermatology/gi, 'Cosmetology').replace(/Dermatological/gi, 'Cosmetological')}
             </p>
             <p className="text-xs text-[#7C7067] mt-1.5 max-w-md leading-relaxed">
               {settings.address}
@@ -148,7 +148,9 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onC
                 <tr key={item.id}>
                   <td className="py-3 px-3 font-mono text-[#7C7067]">{index + 1}</td>
                   <td className="py-3 px-3">
-                    <div className="font-bold text-[#2B2420]">{item.description}</div>
+                    <div className="font-bold text-[#2B2420]">
+                      {item.description ? item.description.replace(/Dermatology/gi, 'Cosmetology').replace(/Dermatological/gi, 'Cosmetological') : ''}
+                    </div>
                     {item.hsnCode && (
                       <div className="text-[10px] text-[#7C7067] font-mono">HSN: {item.hsnCode}</div>
                     )}
