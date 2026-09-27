@@ -122,7 +122,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onC
               Attending Doctor / Staff
             </h4>
             <p className="font-bold text-sm text-[#2B2420]">{invoice.doctorName || 'Dr. Unnati Suthar'}</p>
-            <p className="text-[#7C7067] mt-0.5">MD Dermatology & Aesthetic Surgery</p>
+            <p className="text-[#7C7067] mt-0.5">Cosmetologist & Aesthetic Care</p>
             <p className="text-[#7C7067] mt-1 font-mono text-[11px]">
               Billed by: {invoice.creatorName}
             </p>

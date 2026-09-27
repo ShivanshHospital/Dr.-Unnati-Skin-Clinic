@@ -36,7 +36,7 @@ export const ClinicSettingsView: React.FC = () => {
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
   const [doctorFormData, setDoctorFormData] = useState({
     name: '',
-    specialization: 'MD (Dermatology)',
+    specialization: 'Cosmetologist',
     registrationNo: 'GMC-12345',
     defaultFee: 800,
     phone: '',
@@ -274,7 +274,7 @@ export const ClinicSettingsView: React.FC = () => {
                 setEditingDoctor(null);
                 setDoctorFormData({
                   name: '',
-                  specialization: 'MD (Dermatology)',
+                  specialization: 'Cosmetologist',
                   registrationNo: 'GMC-12345',
                   defaultFee: 800,
                   phone: '',

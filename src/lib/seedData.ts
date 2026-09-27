@@ -14,7 +14,7 @@ import {
 
 export const initialClinicSettings: ClinicSettings = {
   clinicName: 'Dr. Unnati Skin Clinic',
-  tagline: 'Advanced Dermatology, Laser & Aesthetic Care',
+  tagline: 'Advanced Cosmetology, Laser & Aesthetic Care',
   logoUrl: '',
   address: '204-205, Sahara Complex, Near Mahadev Temple, Wadhwan Road, Surendranagar, Gujarat - 363002',
   phone: '+91 98795 12345 / +91 02752 245678',
@@ -69,7 +69,7 @@ export const initialDoctors: Doctor[] = [
   {
     id: 'doc-1',
     name: 'Dr. Unnati Suthar',
-    specialization: 'MD (Dermatology, Venereology & Leprosy)',
+    specialization: 'Cosmetologist & Aesthetic Specialist',
     registrationNo: 'GMC-64821',
     defaultFee: 800,
     phone: '+91 98795 12345',
@@ -104,7 +104,7 @@ export const initialProcedures: Procedure[] = [
   {
     id: 'prc-3',
     name: 'Hydrafacial & Glow Infusion',
-    category: 'Facial Dermatology',
+    category: 'Facial Cosmetology',
     basePrice: 2800,
     description: '3-step medical grade facial with vortex extraction and hyaluronic acid hydration.',
   },
@@ -156,7 +156,7 @@ export const initialSuppliers: Supplier[] = [
   },
   {
     id: 'sup-2',
-    name: 'Cipla Dermatology Division',
+    name: 'Cipla Cosmetology Division',
     contactPerson: 'Amit Trivedi',
     phone: '+91 98790 33445',
     gstin: '24AAACC1209B1ZA',
@@ -172,7 +172,7 @@ export const initialSuppliers: Supplier[] = [
   },
   {
     id: 'sup-4',
-    name: 'DermaCare Pharma Distributors',
+    name: 'CosmoCare Pharma Distributors',
     contactPerson: 'Sanjay Patel',
     phone: '+91 98240 12121',
     gstin: '24AABFD8832K1ZP',
@@ -197,7 +197,7 @@ export const initialMedicines: Medicine[] = [
     name: 'Glycolic Acid 10% Foaming Face Wash (100ml)',
     genericName: 'Glycolic Acid + AHA Cleanser',
     category: 'Cleansers & Washes',
-    manufacturer: 'Cipla Derma',
+    manufacturer: 'Cipla Cosmo',
     unit: 'Bottle',
     hsnCode: '330499',
     gstRate: 18,
@@ -252,7 +252,7 @@ export const initialMedicines: Medicine[] = [
     name: 'Vitamin C 20% Glow Serum (30ml)',
     genericName: 'L-Ascorbic Acid + Ferulic Acid',
     category: 'Sunscreen & Serums',
-    manufacturer: 'DermaCare',
+    manufacturer: 'CosmoCare',
     unit: 'Bottle',
     hsnCode: '330499',
     gstRate: 18,
@@ -263,7 +263,7 @@ export const initialMedicines: Medicine[] = [
     name: 'Hydroquinone 2% + Kojic Acid Cream (15g)',
     genericName: 'Depigmenting Triple Formula',
     category: 'Topical Creams & Ointments',
-    manufacturer: 'Cipla Derma',
+    manufacturer: 'Cipla Cosmo',
     unit: 'Tube',
     hsnCode: '300490',
     gstRate: 12,
@@ -296,7 +296,7 @@ export const initialMedicines: Medicine[] = [
     name: 'Azelaic Acid 15% Gel (30g)',
     genericName: 'Azelaic Acid Micronized',
     category: 'Topical Creams & Ointments',
-    manufacturer: 'Cipla Derma',
+    manufacturer: 'Cipla Cosmo',
     unit: 'Tube',
     hsnCode: '300490',
     gstRate: 12,
@@ -352,7 +352,7 @@ export const initialBatches: MedicineBatch[] = [
     sellingPrice: 450,
     quantityInStock: 28,
     supplierId: 'sup-2',
-    supplierName: 'Cipla Dermatology Division',
+    supplierName: 'Cipla Cosmetology Division',
   },
   // Sunscreen - Batch 1 critical expiry & low stock
   {
@@ -390,7 +390,7 @@ export const initialBatches: MedicineBatch[] = [
     sellingPrice: 320,
     quantityInStock: 35,
     supplierId: 'sup-2',
-    supplierName: 'Cipla Dermatology Division',
+    supplierName: 'Cipla Cosmetology Division',
   },
   // Clindamycin Gel - Expiring soon
   {
@@ -429,7 +429,7 @@ export const initialBatches: MedicineBatch[] = [
     sellingPrice: 1150,
     quantityInStock: 22,
     supplierId: 'sup-4',
-    supplierName: 'DermaCare Pharma Distributors',
+    supplierName: 'CosmoCare Pharma Distributors',
   },
   // Hydroquinone - Expiring & Low Stock
   {
@@ -442,7 +442,7 @@ export const initialBatches: MedicineBatch[] = [
     sellingPrice: 290,
     quantityInStock: 4, // Low stock alert (<15)
     supplierId: 'sup-2',
-    supplierName: 'Cipla Dermatology Division',
+    supplierName: 'Cipla Cosmetology Division',
   },
   // Doxycycline
   {
@@ -481,7 +481,7 @@ export const initialBatches: MedicineBatch[] = [
     sellingPrice: 380,
     quantityInStock: 16,
     supplierId: 'sup-2',
-    supplierName: 'Cipla Dermatology Division',
+    supplierName: 'Cipla Cosmetology Division',
   },
   // Ketoconazole Shampoo
   {
@@ -583,7 +583,7 @@ export const initialInvoices: Invoice[] = [
       {
         id: 'itm-1',
         invoiceId: 'inv-1001',
-        description: 'OPD Dermatological Consultation (Follow-up)',
+        description: 'OPD Cosmetology Consultation (Follow-up)',
         quantity: 1,
         unitPrice: 800,
         discount: 0,
