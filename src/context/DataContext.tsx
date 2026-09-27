@@ -130,6 +130,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return loaded;
   });
 
+  // Versioning for automatic cache migration across Vercel deployments
+  const CURRENT_DATA_VERSION = 'v2.1_cosmetology_logo';
+
+  useEffect(() => {
+    const savedVersion = localStorage.getItem('drunnati_app_version');
+    if (savedVersion !== CURRENT_DATA_VERSION) {
+      localStorage.setItem('drunnati_app_version', CURRENT_DATA_VERSION);
+      setSettings((prev) => ({
+        ...prev,
+        logoUrl: '/logo.png',
+        tagline: (prev.tagline || 'Advanced Cosmetology, Laser & Aesthetic Care').replace(/Dermatology/gi, 'Cosmetology'),
+      }));
+    }
+  }, []);
+
   // Sync to localStorage
   useEffect(() => { localStorage.setItem('drunnati_patients', JSON.stringify(patients)); }, [patients]);
   useEffect(() => { localStorage.setItem('drunnati_doctors', JSON.stringify(doctors)); }, [doctors]);
