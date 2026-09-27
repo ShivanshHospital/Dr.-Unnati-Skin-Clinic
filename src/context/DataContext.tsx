@@ -122,7 +122,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [invoices, setInvoices] = useState<Invoice[]>(() => loadStored('drunnati_invoices', initialInvoices));
   const [stockTransactions, setStockTransactions] = useState<StockTransaction[]>(() => loadStored('drunnati_stx', initialStockTransactions));
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => loadStored('drunnati_audit', initialAuditLogs));
-  const [settings, setSettings] = useState<ClinicSettings>(() => loadStored('drunnati_settings', initialClinicSettings));
+  const [settings, setSettings] = useState<ClinicSettings>(() => {
+    const loaded = loadStored('drunnati_settings', initialClinicSettings);
+    if (!loaded.logoUrl) {
+      loaded.logoUrl = '/logo.png';
+    }
+    return loaded;
+  });
 
   // Sync to localStorage
   useEffect(() => { localStorage.setItem('drunnati_patients', JSON.stringify(patients)); }, [patients]);

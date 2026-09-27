@@ -65,23 +65,30 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onC
 
         {/* Clinic Header */}
         <div className="border-b-2 border-[#2B2420] pb-5 flex items-start justify-between">
-          <div>
-            <h1 className="font-serif text-2xl font-bold text-[#2B2420] tracking-tight">
-              {settings.clinicName}
-            </h1>
-            <p className="text-xs font-semibold text-[#C98A7D] uppercase tracking-wider mt-0.5">
-              {(settings.tagline || 'Advanced Cosmetology, Laser & Aesthetic Care').replace(/Dermatology/gi, 'Cosmetology').replace(/Dermatological/gi, 'Cosmetological')}
-            </p>
-            <p className="text-xs text-[#7C7067] mt-1.5 max-w-md leading-relaxed">
-              {settings.address}
-            </p>
-            <p className="text-xs text-[#7C7067] mt-0.5 font-mono">
-              Phone: {settings.phone} • Email: {settings.email}
-            </p>
-            <p className="text-xs text-[#7C7067] mt-0.5 font-mono">
-              GSTIN: <span className="font-bold text-[#2B2420]">{settings.gstin}</span> • Reg No:{' '}
-              <span className="font-bold text-[#2B2420]">{settings.registrationNo}</span>
-            </p>
+          <div className="flex items-start space-x-4">
+            <img
+              src={settings.logoUrl || '/logo.png'}
+              alt="Clinic Logo"
+              className="w-16 h-16 object-contain rounded-xl bg-white p-1 border border-[#E8E2DC] shadow-xs"
+            />
+            <div>
+              <h1 className="font-serif text-2xl font-bold text-[#2B2420] tracking-tight">
+                {settings.clinicName}
+              </h1>
+              <p className="text-xs font-semibold text-[#C98A7D] uppercase tracking-wider mt-0.5">
+                {(settings.tagline || 'Advanced Cosmetology, Laser & Aesthetic Care').replace(/Dermatology/gi, 'Cosmetology').replace(/Dermatological/gi, 'Cosmetological')}
+              </p>
+              <p className="text-xs text-[#7C7067] mt-1.5 max-w-md leading-relaxed">
+                {settings.address}
+              </p>
+              <p className="text-xs text-[#7C7067] mt-0.5 font-mono">
+                Phone: {settings.phone} • Email: {settings.email}
+              </p>
+              <p className="text-xs text-[#7C7067] mt-0.5 font-mono">
+                GSTIN: <span className="font-bold text-[#2B2420]">{settings.gstin}</span> • Reg No:{' '}
+                <span className="font-bold text-[#2B2420]">{settings.registrationNo}</span>
+              </p>
+            </div>
           </div>
 
           <div className="text-right">

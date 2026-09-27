@@ -128,9 +128,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Clinic Brand Header */}
           <div className="p-5 border-b border-[#E8E2DC] flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#C98A7D] to-[#B98A5E] flex items-center justify-center text-white shadow-md">
-                <Stethoscope className="w-5 h-5" />
-              </div>
+              <img
+                src={settings.logoUrl || '/logo.png'}
+                alt="Dr. Unnati Skin Clinic"
+                className="w-11 h-11 object-contain rounded-xl bg-white p-0.5 shadow-sm border border-[#E8E2DC]"
+              />
               <div>
                 <h1 className="font-serif text-base font-bold text-[#2B2420] leading-tight tracking-tight">
                   Dr. Unnati

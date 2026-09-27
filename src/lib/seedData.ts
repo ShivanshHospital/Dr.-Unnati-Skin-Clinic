@@ -15,7 +15,7 @@ import {
 export const initialClinicSettings: ClinicSettings = {
   clinicName: 'Dr. Unnati Skin Clinic',
   tagline: 'Advanced Cosmetology, Laser & Aesthetic Care',
-  logoUrl: '',
+  logoUrl: '/logo.png',
   address: '204-205, Sahara Complex, Near Mahadev Temple, Wadhwan Road, Surendranagar, Gujarat - 363002',
   phone: '+91 98795 12345 / +91 02752 245678',
   email: 'contact@drunnatiskinclinic.com',

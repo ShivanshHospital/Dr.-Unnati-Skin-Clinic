@@ -163,6 +163,23 @@ export const ClinicSettingsView: React.FC = () => {
                 />
               </div>
 
+              <div className="md:col-span-2 flex items-center space-x-4 p-3 bg-[#FAF7F5] rounded-xl border border-[#E8E2DC]">
+                <img
+                  src={generalForm.logoUrl || '/logo.png'}
+                  alt="Clinic Logo Preview"
+                  className="w-14 h-14 object-contain rounded-xl bg-white p-1 border border-[#E8E2DC] shadow-xs"
+                />
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-[#2B2420] mb-1">Clinic Logo Path / URL</label>
+                  <input
+                    type="text"
+                    value={generalForm.logoUrl || '/logo.png'}
+                    onChange={(e) => setGeneralForm({ ...generalForm, logoUrl: e.target.value })}
+                    className="w-full px-3.5 py-1.5 text-xs bg-white border border-[#E8E2DC] rounded-xl text-[#2B2420] font-mono"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-[#2B2420] mb-1">Tagline</label>
                 <input
