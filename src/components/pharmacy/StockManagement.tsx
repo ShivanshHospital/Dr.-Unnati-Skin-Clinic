@@ -122,7 +122,8 @@ export const StockManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8E2DC]">
-              {batches.map((batch) => {
+              {batches.length > 0 ? (
+                batches.map((batch) => {
                 const med = medicines.find((m) => m.id === batch.medicineId);
                 const daysLeft = getDaysUntilExpiry(batch.expiryDate);
                 const isExpiringSoon = daysLeft <= 60;
@@ -183,8 +184,15 @@ export const StockManagement: React.FC = () => {
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
+              })
+            ) : (
+              <tr>
+                <td colSpan={hasPermission('view_cost_prices') ? 8 : 7} className="py-8 text-center text-[#7C7067]">
+                  No inventory batches recorded yet. Click 'New Purchase Stock In' to add your first medicine batch.
+                </td>
+              </tr>
+            )}
+          </tbody>
           </table>
         </div>
       </div>

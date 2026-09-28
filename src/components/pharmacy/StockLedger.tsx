@@ -32,40 +32,48 @@ export const StockLedger: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8E2DC]">
-              {stockTransactions.map((stx) => (
-                <tr key={stx.id} className="hover:bg-[#FAF7F5] transition-colors">
-                  <td className="py-3.5 px-4 text-[#7C7067] font-mono">
-                    {formatDate(stx.date, true)}
+              {stockTransactions.length > 0 ? (
+                stockTransactions.map((stx) => (
+                  <tr key={stx.id} className="hover:bg-[#FAF7F5] transition-colors">
+                    <td className="py-3.5 px-4 text-[#7C7067] font-mono">
+                      {formatDate(stx.date, true)}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`px-2 py-0.5 rounded font-bold text-[10px] inline-flex items-center gap-1 uppercase ${
+                          stx.type === 'IN'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : stx.type === 'OUT'
+                            ? 'bg-blue-100 text-blue-800'
+                            : stx.type === 'RETURN'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {stx.type === 'IN' && <ArrowUpRight className="w-3 h-3" />}
+                        {stx.type === 'OUT' && <ArrowDownRight className="w-3 h-3" />}
+                        {stx.type === 'RETURN' && <RotateCcw className="w-3 h-3" />}
+                        {stx.type}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 font-bold text-[#2B2420]">{stx.medicineName}</td>
+                    <td className="py-3.5 px-4 font-mono font-bold text-[#C98A7D]">
+                      {stx.batchNo}
+                    </td>
+                    <td className="py-3.5 px-4 text-center font-mono font-bold text-[#2B2420]">
+                      {stx.type === 'OUT' ? `-${stx.quantity}` : `+${stx.quantity}`}
+                    </td>
+                    <td className="py-3.5 px-4 text-[#7C7067]">{stx.userName}</td>
+                    <td className="py-3.5 px-4 text-[#7C7067] italic">{stx.remarks}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-[#7C7067]">
+                    No stock audit transactions recorded yet.
                   </td>
-                  <td className="py-3.5 px-4">
-                    <span
-                      className={`px-2 py-0.5 rounded font-bold text-[10px] inline-flex items-center gap-1 uppercase ${
-                        stx.type === 'IN'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : stx.type === 'OUT'
-                          ? 'bg-blue-100 text-blue-800'
-                          : stx.type === 'RETURN'
-                          ? 'bg-purple-100 text-purple-800'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}
-                    >
-                      {stx.type === 'IN' && <ArrowUpRight className="w-3 h-3" />}
-                      {stx.type === 'OUT' && <ArrowDownRight className="w-3 h-3" />}
-                      {stx.type === 'RETURN' && <RotateCcw className="w-3 h-3" />}
-                      {stx.type}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 font-bold text-[#2B2420]">{stx.medicineName}</td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-[#C98A7D]">
-                    {stx.batchNo}
-                  </td>
-                  <td className="py-3.5 px-4 text-center font-mono font-bold text-[#2B2420]">
-                    {stx.type === 'OUT' ? `-${stx.quantity}` : `+${stx.quantity}`}
-                  </td>
-                  <td className="py-3.5 px-4 text-[#7C7067]">{stx.userName}</td>
-                  <td className="py-3.5 px-4 text-[#7C7067] italic">{stx.remarks}</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

@@ -150,13 +150,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
-  // Versioning for automatic cache migration across Vercel deployments
-  const CURRENT_DATA_VERSION = 'v2.1_cosmetology_logo';
+  // Versioning for automatic cache migration across deployments (clears demo data)
+  const CURRENT_DATA_VERSION = 'v3.0_clean_production';
 
   useEffect(() => {
     const savedVersion = localStorage.getItem('drunnati_app_version');
     if (savedVersion !== CURRENT_DATA_VERSION) {
       localStorage.setItem('drunnati_app_version', CURRENT_DATA_VERSION);
+      // Clean out all previous demo data from browser's localStorage
+      localStorage.removeItem('drunnati_patients');
+      localStorage.removeItem('drunnati_invoices');
+      localStorage.removeItem('drunnati_batches');
+      localStorage.removeItem('drunnati_stx');
+      localStorage.removeItem('drunnati_audit');
+      setPatients([]);
+      setInvoices([]);
+      setBatches([]);
+      setStockTransactions([]);
+      setAuditLogs([]);
       setSettings((prev) => ({
         ...prev,
         logoUrl: '/logo.png',

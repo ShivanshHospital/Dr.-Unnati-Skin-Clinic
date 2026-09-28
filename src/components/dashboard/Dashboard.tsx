@@ -425,48 +425,56 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8E2DC]">
-              {invoices.slice(0, 6).map((inv) => (
-                <tr key={inv.id} className="hover:bg-[#FAF7F5] transition-colors">
-                  <td className="py-3 px-3 font-mono font-bold text-[#2B2420]">{inv.invoiceNo}</td>
-                  <td className="py-3 px-3">
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase border ${
-                        inv.invoiceType === 'OPD'
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : inv.invoiceType === 'PROCEDURE'
-                          ? 'bg-purple-50 text-purple-700 border-purple-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      }`}
-                    >
-                      {inv.invoiceType}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 font-semibold text-[#2B2420]">
-                    {inv.patientName}
-                    <div className="text-[10px] text-[#7C7067] font-mono">{inv.patientPhone}</div>
-                  </td>
-                  <td className="py-3 px-3 text-[#7C7067]">{formatDate(inv.date, true)}</td>
-                  <td className="py-3 px-3 font-mono font-bold text-right text-[#2B2420]">
-                    {formatCurrency(inv.grandTotal)}
-                  </td>
-                  <td className="py-3 px-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-medium text-[#2B2420]">{inv.paymentMode}</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#EFF6F2] text-[#5B8A72]">
-                        {inv.paymentStatus}
+              {invoices.length > 0 ? (
+                invoices.slice(0, 6).map((inv) => (
+                  <tr key={inv.id} className="hover:bg-[#FAF7F5] transition-colors">
+                    <td className="py-3 px-3 font-mono font-bold text-[#2B2420]">{inv.invoiceNo}</td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase border ${
+                          inv.invoiceType === 'OPD'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : inv.invoiceType === 'PROCEDURE'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}
+                      >
+                        {inv.invoiceType}
                       </span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <button
-                      onClick={() => onViewInvoice(inv)}
-                      className="p-1.5 rounded-lg bg-[#FAF7F5] border border-[#E8E2DC] text-[#2B2420] hover:bg-[#C98A7D] hover:text-white transition-all cursor-pointer inline-flex items-center gap-1 font-semibold text-[11px]"
-                    >
-                      <Eye className="w-3.5 h-3.5" /> View
-                    </button>
+                    </td>
+                    <td className="py-3 px-3 font-semibold text-[#2B2420]">
+                      {inv.patientName}
+                      <div className="text-[10px] text-[#7C7067] font-mono">{inv.patientPhone}</div>
+                    </td>
+                    <td className="py-3 px-3 text-[#7C7067]">{formatDate(inv.date, true)}</td>
+                    <td className="py-3 px-3 font-mono font-bold text-right text-[#2B2420]">
+                      {formatCurrency(inv.grandTotal)}
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-[#2B2420]">{inv.paymentMode}</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#EFF6F2] text-[#5B8A72]">
+                          {inv.paymentStatus}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => onViewInvoice(inv)}
+                        className="p-1.5 rounded-lg bg-[#FAF7F5] border border-[#E8E2DC] text-[#2B2420] hover:bg-[#C98A7D] hover:text-white transition-all cursor-pointer inline-flex items-center gap-1 font-semibold text-[11px]"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-[#7C7067]">
+                    No invoices generated yet. Click 'Generate Invoice' to create your first bill.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
