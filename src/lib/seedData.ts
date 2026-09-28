@@ -30,40 +30,16 @@ export const initialClinicSettings: ClinicSettings = {
   termsAndConditions: '1. Fees once paid are non-refundable.\n2. Please carry this invoice for follow-up visits.\n3. Prescribed medicines must be taken strictly as per doctor instruction.',
 };
 
-export const initialUsers: User[] = [
-  {
-    id: 'usr-1',
-    name: 'Dr. Unnati Suthar',
-    email: 'unnati@drunnatiskinclinic.com',
-    role: 'admin',
-    isActive: true,
-    phone: '+91 98795 12345',
-  },
-  {
-    id: 'usr-2',
-    name: 'Dr. Saurabh Suthar',
-    email: 'saurabh@drunnatiskinclinic.com',
-    role: 'doctor',
-    isActive: true,
-    phone: '+91 98795 54321',
-  },
-  {
-    id: 'usr-3',
-    name: 'Priya Patel',
-    email: 'reception@drunnatiskinclinic.com',
-    role: 'receptionist',
-    isActive: true,
-    phone: '+91 94280 11223',
-  },
-  {
-    id: 'usr-4',
-    name: 'Rajesh Shah',
-    email: 'pharmacy@drunnatiskinclinic.com',
-    role: 'pharmacist',
-    isActive: true,
-    phone: '+91 98980 99887',
-  },
-];
+export const defaultClinicUser: User = {
+  id: 'usr-1',
+  name: 'Dr. Unnati Suthar',
+  email: 'contact@drunnatiskinclinic.com',
+  role: 'admin',
+  isActive: true,
+  phone: '+91 98795 12345',
+};
+
+export const initialUsers: User[] = [defaultClinicUser];
 
 export const initialDoctors: Doctor[] = [
   {

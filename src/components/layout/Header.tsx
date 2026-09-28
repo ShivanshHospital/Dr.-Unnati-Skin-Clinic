@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Search,
   Bell,
-  UserCheck,
   PlusCircle,
   Calendar,
   Sparkles,
@@ -12,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
-import { UserRole } from '../../types';
 import { formatDate } from '../../lib/utils';
 
 interface HeaderProps {
@@ -21,7 +19,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenNewInvoice, onSelectPatient }) => {
-  const { currentUser, switchRole } = useAuth();
+  const { currentUser } = useAuth();
   const { patients, lowStockItemsCount, expiringBatchesCount, settings } = useData();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,13 +34,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenNewInvoice, onSelectPatien
           p.id.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
-
-  const rolesList: { role: UserRole; label: string; bg: string }[] = [
-    { role: 'admin', label: 'Admin (Dr. Unnati)', bg: 'bg-amber-100 text-amber-900 border-amber-300' },
-    { role: 'doctor', label: 'Doctor (Dr. Saurabh)', bg: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
-    { role: 'receptionist', label: 'Reception (Priya)', bg: 'bg-rose-100 text-rose-900 border-rose-300' },
-    { role: 'pharmacist', label: 'Pharmacy (Rajesh)', bg: 'bg-blue-100 text-blue-900 border-blue-300' },
-  ];
 
   const totalAlerts = lowStockItemsCount + expiringBatchesCount;
 
@@ -178,30 +169,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenNewInvoice, onSelectPatien
           )}
         </div>
 
-        {/* Active Role Selector Switcher */}
+        {/* Clinic Administrator Badge */}
         <div className="flex items-center space-x-2 border-l border-[#E8E2DC] pl-3 lg:pl-5">
-          <div className="text-right hidden md:block">
+          <div className="text-right">
             <div className="text-xs font-bold text-[#2B2420] flex items-center justify-end gap-1">
               {currentUser.name}
               <ShieldCheck className="w-3.5 h-3.5 text-[#C98A7D]" />
             </div>
-            <div className="text-[11px] text-[#7C7067] capitalize font-medium">
-              Role: <span className="font-semibold text-[#2B2420]">{currentUser.role}</span>
+            <div className="text-[11px] text-[#7C7067] font-medium">
+              Clinic Administrator
             </div>
-          </div>
-
-          <div className="relative group">
-            <select
-              value={currentUser.role}
-              onChange={(e) => switchRole(e.target.value as UserRole)}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-[#E8E2DC] bg-[#FAF7F5] text-[#2B2420] hover:border-[#C98A7D] focus:outline-none transition-all cursor-pointer"
-            >
-              {rolesList.map((r) => (
-                <option key={r.role} value={r.role}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       </div>

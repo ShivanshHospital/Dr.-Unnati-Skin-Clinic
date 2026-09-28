@@ -13,7 +13,6 @@ import { MedicineMaster } from './components/pharmacy/MedicineMaster';
 import { StockManagement } from './components/pharmacy/StockManagement';
 import { StockLedger } from './components/pharmacy/StockLedger';
 import { ReportsView } from './components/reports/ReportsView';
-import { UsersAndRoles } from './components/users/UsersAndRoles';
 import { ClinicSettingsView } from './components/settings/ClinicSettingsView';
 import { Invoice, InvoiceType, Patient } from './types';
 import { Menu } from 'lucide-react';
@@ -118,8 +117,6 @@ const AppContent: React.FC = () => {
           )}
 
           {activeTab === 'reports' && <ReportsView />}
-
-          {activeTab === 'users' && <UsersAndRoles />}
 
           {activeTab === 'settings' && <ClinicSettingsView />}
         </main>

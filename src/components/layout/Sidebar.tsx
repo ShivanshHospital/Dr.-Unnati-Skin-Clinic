@@ -7,7 +7,6 @@ import {
   Pill,
   Boxes,
   BarChart3,
-  UserCheck,
   Settings,
   Sparkles,
   Stethoscope,
@@ -26,7 +25,6 @@ export type ActiveTab =
   | 'pharmacy_inventory'
   | 'pharmacy_stock'
   | 'reports'
-  | 'users'
   | 'settings';
 
 interface SidebarProps {
@@ -93,12 +91,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Reports & Revenue',
       icon: BarChart3,
       permission: 'view_reports',
-    },
-    {
-      id: 'users' as ActiveTab,
-      label: 'Staff & Roles',
-      icon: UserCheck,
-      permission: 'manage_users',
     },
     {
       id: 'settings' as ActiveTab,

@@ -107,6 +107,24 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAuth();
 
+  // Versioning for automatic cache migration across deployments (clears demo data)
+  const CURRENT_DATA_VERSION = 'v5.0_clean_production';
+
+  // Synchronous cache cleanup before component mounts
+  if (typeof window !== 'undefined') {
+    const savedVersion = localStorage.getItem('drunnati_app_version');
+    if (savedVersion !== CURRENT_DATA_VERSION) {
+      localStorage.setItem('drunnati_app_version', CURRENT_DATA_VERSION);
+      localStorage.removeItem('drunnati_patients');
+      localStorage.removeItem('drunnati_invoices');
+      localStorage.removeItem('drunnati_batches');
+      localStorage.removeItem('drunnati_stx');
+      localStorage.removeItem('drunnati_audit');
+      localStorage.removeItem('drunnati_medicines');
+      localStorage.removeItem('drunnati_current_user');
+    }
+  }
+
   // Helper to load or fallback to seed
   const loadStored = <T,>(key: string, fallback: T): T => {
     const saved = localStorage.getItem(key);
@@ -150,9 +168,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
-  // Versioning for automatic cache migration across deployments (clears demo data)
-  const CURRENT_DATA_VERSION = 'v4.0_clean_production';
-
   useEffect(() => {
     const savedVersion = localStorage.getItem('drunnati_app_version');
     if (savedVersion !== CURRENT_DATA_VERSION) {
@@ -164,6 +179,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('drunnati_stx');
       localStorage.removeItem('drunnati_audit');
       localStorage.removeItem('drunnati_medicines');
+      localStorage.removeItem('drunnati_current_user');
       setPatients([]);
       setInvoices([]);
       setBatches([]);
@@ -544,7 +560,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 1. Sync Patients: Send local patients to Supabase
-      await savePatientsBulkToSupabase(patients);
+      if (patients.length > 0) {
+        await savePatientsBulkToSupabase(patients);
+      }
 
       // Pull any existing Supabase patients and merge
       const remotePatients = await fetchPatientsFromSupabase();
