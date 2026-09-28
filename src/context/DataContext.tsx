@@ -34,6 +34,7 @@ import {
   savePatientsBulkToSupabase,
   fetchPatientsFromSupabase,
   saveInvoiceToSupabase,
+  fetchInvoicesFromSupabase,
   checkSupabaseConnection,
 } from '../lib/supabase';
 import { getInvoicePDFBlob } from '../lib/invoicePdf';
@@ -384,12 +385,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     paymentStatus: PaymentStatus;
     notes?: string;
   }): Invoice => {
-    const typeCount = invoices.filter((i) => i.invoiceType === invoiceData.invoiceType).length;
     let customPrefix = settings.opdPrefix;
     if (invoiceData.invoiceType === 'PROCEDURE') customPrefix = settings.prcPrefix;
     if (invoiceData.invoiceType === 'MEDICINE') customPrefix = settings.medPrefix;
 
-    const invoiceNo = generateInvoiceNo(invoiceData.invoiceType, typeCount, customPrefix, settings.financialYear);
+    const existingTypeInvoices = invoices.filter((i) => i.invoiceType === invoiceData.invoiceType);
+    let maxSeq = existingTypeInvoices.length;
+    existingTypeInvoices.forEach((inv) => {
+      const match = inv.invoiceNo.match(/-(\d+)$/);
+      if (match) {
+        const seq = parseInt(match[1], 10);
+        if (seq > maxSeq) maxSeq = seq;
+      }
+    });
+
+    const invoiceNo = generateInvoiceNo(invoiceData.invoiceType, maxSeq, customPrefix, settings.financialYear);
     const invoiceId = `inv-${Date.now()}`;
 
     const formattedItems: InvoiceItem[] = invoiceData.items.map((item, idx) => ({
@@ -575,28 +585,62 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
 
-      // 2. Sync Invoices: Save and upload PDF for each invoice to Supabase Storage
-      let updatedInvoices = [...invoices];
-      for (let i = 0; i < updatedInvoices.length; i++) {
-        const inv = updatedInvoices[i];
-        try {
-          const pdfBlob = getInvoicePDFBlob(inv, settings);
-          const res = await saveInvoiceToSupabase(inv, pdfBlob);
-          if (res.success && res.pdfUrl) {
-            updatedInvoices[i] = { ...inv, pdfUrl: res.pdfUrl, pdfPath: res.pdfPath };
+      // 2. Sync Invoices: Pull all remote invoices from Supabase backend & merge
+      const remoteInvoices = await fetchInvoicesFromSupabase();
+      let mergedInvoices: Invoice[] = [];
+      setInvoices((prevLocal) => {
+        const map = new Map<string, Invoice>();
+        // Add remote invoices from Supabase first
+        if (remoteInvoices && remoteInvoices.length > 0) {
+          remoteInvoices.forEach((inv) => map.set(inv.id, inv));
+        }
+        // Merge with local invoices
+        prevLocal.forEach((inv) => {
+          const existing = map.get(inv.id);
+          if (!existing) {
+            map.set(inv.id, inv);
+          } else {
+            map.set(inv.id, {
+              ...existing,
+              ...inv,
+              pdfUrl: inv.pdfUrl || existing.pdfUrl,
+              pdfPath: inv.pdfPath || existing.pdfPath,
+            });
           }
-        } catch (e) {
-          console.warn(`Failed to upload PDF for invoice ${inv.invoiceNo}:`, e);
+        });
+        mergedInvoices = Array.from(map.values()).sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        return mergedInvoices;
+      });
+
+      // 3. Ensure all invoices have their PDFs generated and uploaded in Supabase Storage
+      let didUploadPdfs = false;
+      for (let i = 0; i < mergedInvoices.length; i++) {
+        const inv = mergedInvoices[i];
+        if (!inv.pdfUrl) {
+          try {
+            const pdfBlob = getInvoicePDFBlob(inv, settings);
+            const res = await saveInvoiceToSupabase(inv, pdfBlob);
+            if (res.success && res.pdfUrl) {
+              mergedInvoices[i] = { ...inv, pdfUrl: res.pdfUrl, pdfPath: res.pdfPath };
+              didUploadPdfs = true;
+            }
+          } catch (e) {
+            console.warn(`Failed to upload PDF for invoice ${inv.invoiceNo}:`, e);
+          }
         }
       }
-      setInvoices(updatedInvoices);
+      if (didUploadPdfs) {
+        setInvoices([...mergedInvoices]);
+      }
 
       const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
       setLastSyncTime(now);
       setIsSyncing(false);
       return {
         success: true,
-        message: `All patient registrations & invoice PDFs successfully saved in Supabase backend at ${now}.`,
+        message: `All patient registrations & invoices successfully synchronized with Supabase cloud at ${now}.`,
       };
     } catch (err: any) {
       setIsSyncing(false);
@@ -606,12 +650,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initial auto-sync on application mount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      syncWithSupabase().catch((err) => {
-        console.warn('Initial Supabase auto-sync notice:', err);
-      });
-    }, 1500);
-    return () => clearTimeout(timer);
+    syncWithSupabase().catch((err) => {
+      console.warn('Initial Supabase auto-sync notice:', err);
+    });
   }, []);
 
   // Computations for Badges & Alerts

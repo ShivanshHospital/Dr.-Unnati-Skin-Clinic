@@ -237,33 +237,46 @@ export async function fetchInvoicesFromSupabase(): Promise<Invoice[] | null> {
       return null;
     }
 
-    return data.map((row: any) => ({
-      id: row.id,
-      invoiceNo: row.invoice_no,
-      invoiceType: row.invoice_type,
-      patientId: row.patient_id || undefined,
-      patientName: row.patient_name,
-      patientPhone: row.patient_phone || '',
-      patientUHID: row.patient_uhid || undefined,
-      patientAgeGender: row.patient_age_gender || undefined,
-      doctorId: row.doctor_id || undefined,
-      doctorName: row.doctor_name || undefined,
-      date: row.date,
-      items: row.items || [],
-      subtotal: Number(row.subtotal) || 0,
-      discountTotal: Number(row.discount_total) || 0,
-      taxTotal: Number(row.tax_total) || 0,
-      grandTotal: Number(row.grand_total) || 0,
-      paymentMode: row.payment_mode,
-      paymentStatus: row.payment_status,
-      status: row.status,
-      createdBy: row.created_by || '',
-      creatorName: row.creator_name || '',
-      cancelReason: row.cancel_reason || undefined,
-      notes: row.notes || undefined,
-      pdfUrl: row.pdf_url || undefined,
-      pdfPath: row.pdf_path || undefined,
-    }));
+    return data.map((row: any) => {
+      let parsedItems = [];
+      if (Array.isArray(row.items)) {
+        parsedItems = row.items;
+      } else if (typeof row.items === 'string') {
+        try {
+          parsedItems = JSON.parse(row.items);
+        } catch {
+          parsedItems = [];
+        }
+      }
+
+      return {
+        id: row.id,
+        invoiceNo: row.invoice_no,
+        invoiceType: row.invoice_type,
+        patientId: row.patient_id || undefined,
+        patientName: row.patient_name,
+        patientPhone: row.patient_phone || '',
+        patientUHID: row.patient_uhid || undefined,
+        patientAgeGender: row.patient_age_gender || undefined,
+        doctorId: row.doctor_id || undefined,
+        doctorName: row.doctor_name || undefined,
+        date: row.date,
+        items: parsedItems,
+        subtotal: Number(row.subtotal) || 0,
+        discountTotal: Number(row.discount_total) || 0,
+        taxTotal: Number(row.tax_total) || 0,
+        grandTotal: Number(row.grand_total) || 0,
+        paymentMode: row.payment_mode,
+        paymentStatus: row.payment_status,
+        status: row.status,
+        createdBy: row.created_by || '',
+        creatorName: row.creator_name || '',
+        cancelReason: row.cancel_reason || undefined,
+        notes: row.notes || undefined,
+        pdfUrl: row.pdf_url || undefined,
+        pdfPath: row.pdf_path || undefined,
+      };
+    });
   } catch (err) {
     console.error('Exception fetching invoices:', err);
     return null;

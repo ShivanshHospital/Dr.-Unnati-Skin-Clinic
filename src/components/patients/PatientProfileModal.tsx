@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   User,
   Phone,
@@ -31,15 +31,22 @@ export const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   onViewInvoice,
   onOpenNewInvoiceForPatient,
 }) => {
-  const { patients, invoices } = useData();
+  const { patients, invoices, syncWithSupabase } = useData();
+
+  useEffect(() => {
+    syncWithSupabase().catch(() => {});
+  }, []);
 
   const patient = patients.find((p) => p.id === patientId);
 
   if (!patient) return null;
 
-  // Filter invoices for this patient (by patientId or patientUHID)
+  // Filter invoices for this patient (by patientId, patientUHID, or matching phone)
   const patientInvoices = invoices.filter(
-    (i) => i.patientId === patient.id || i.patientUHID === patient.id
+    (i) =>
+      i.patientId === patient.id ||
+      i.patientUHID === patient.id ||
+      (i.patientPhone && patient.phone && i.patientPhone === patient.phone)
   );
 
   const activeInvoices = patientInvoices.filter((i) => i.status === 'ACTIVE');

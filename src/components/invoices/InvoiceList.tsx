@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Receipt,
   Search,
@@ -30,6 +30,10 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onViewInvoice, onOpenN
   const { hasPermission } = useAuth();
 
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    syncWithSupabase().catch(() => {});
+  }, []);
 
   const handleManualSync = async () => {
     setSyncFeedback(null);
