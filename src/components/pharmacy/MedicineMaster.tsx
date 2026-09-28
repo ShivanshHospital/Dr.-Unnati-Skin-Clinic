@@ -136,48 +136,58 @@ export const MedicineMaster: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8E2DC]">
-              {filteredMedicines.map((med) => {
-                const medBatches = batches.filter((b) => b.medicineId === med.id);
-                const totalStock = medBatches.reduce((sum, b) => sum + b.quantityInStock, 0);
-                const isLowStock = totalStock <= med.reorderLevel;
+              {filteredMedicines.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-[#7C7067]">
+                    <Pill className="w-8 h-8 mx-auto mb-2 text-[#C98A7D]/40" />
+                    <p className="font-medium text-sm text-[#2B2420]">No pharmacy products in catalog</p>
+                    <p className="text-xs text-[#A89F91] mt-1">Click "+ Add New Medicine" above to add products to the catalog.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredMedicines.map((med) => {
+                  const medBatches = batches.filter((b) => b.medicineId === med.id);
+                  const totalStock = medBatches.reduce((sum, b) => sum + b.quantityInStock, 0);
+                  const isLowStock = totalStock <= med.reorderLevel;
 
-                return (
-                  <tr key={med.id} className="hover:bg-[#FAF7F5] transition-colors">
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-[#2B2420]">{med.name}</div>
-                      <div className="text-[10px] text-[#7C7067]">{med.genericName} • {med.manufacturer}</div>
-                    </td>
-                    <td className="py-3.5 px-4 text-[#7C7067]">{med.category}</td>
-                    <td className="py-3.5 px-4 font-mono text-[#2B2420]">{med.unit}</td>
-                    <td className="py-3.5 px-4 font-mono text-[#7C7067]">{med.hsnCode}</td>
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-[#2B2420]">
-                      {med.gstRate}%
-                    </td>
-                    <td className="py-3.5 px-4 text-center font-mono font-bold">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full ${
-                          isLowStock
-                            ? 'bg-[#FFF5EE] text-[#D97736] border border-[#FDE3D3]'
-                            : 'bg-[#EFF6F2] text-[#5B8A72]'
-                        }`}
-                      >
-                        {totalStock} units
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-center font-mono text-[#7C7067]">
-                      {med.reorderLevel}
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <button
-                        onClick={() => handleOpenEdit(med)}
-                        className="p-1.5 rounded-lg bg-[#FAF7F5] border border-[#E8E2DC] text-[#7C7067] hover:bg-[#2B2420] hover:text-white transition-all"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={med.id} className="hover:bg-[#FAF7F5] transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-[#2B2420]">{med.name}</div>
+                        <div className="text-[10px] text-[#7C7067]">{med.genericName} • {med.manufacturer}</div>
+                      </td>
+                      <td className="py-3.5 px-4 text-[#7C7067]">{med.category}</td>
+                      <td className="py-3.5 px-4 font-mono text-[#2B2420]">{med.unit}</td>
+                      <td className="py-3.5 px-4 font-mono text-[#7C7067]">{med.hsnCode}</td>
+                      <td className="py-3.5 px-4 text-right font-mono font-bold text-[#2B2420]">
+                        {med.gstRate}%
+                      </td>
+                      <td className="py-3.5 px-4 text-center font-mono font-bold">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full ${
+                            isLowStock
+                              ? 'bg-[#FFF5EE] text-[#D97736] border border-[#FDE3D3]'
+                              : 'bg-[#EFF6F2] text-[#5B8A72]'
+                          }`}
+                        >
+                          {totalStock} units
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-center font-mono text-[#7C7067]">
+                        {med.reorderLevel}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <button
+                          onClick={() => handleOpenEdit(med)}
+                          className="p-1.5 rounded-lg bg-[#FAF7F5] border border-[#E8E2DC] text-[#7C7067] hover:bg-[#2B2420] hover:text-white transition-all"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

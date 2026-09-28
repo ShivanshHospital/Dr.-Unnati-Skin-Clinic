@@ -42,8 +42,30 @@ export const StockManagement: React.FC = () => {
     remarks: 'Damage / Write-off',
   });
 
+  const handleOpenStockIn = () => {
+    if (medicines.length === 0) {
+      alert('Please add at least one medicine in the Pharmacy Master Catalog before adding stock.');
+      return;
+    }
+    setStockInData({
+      medicineId: medicines[0]?.id || '',
+      batchNo: '',
+      expiryDate: '',
+      mrp: 300,
+      purchasePrice: 180,
+      sellingPrice: 270,
+      quantityInStock: 50,
+      supplierId: suppliers[0]?.id || '',
+    });
+    setShowStockInModal(true);
+  };
+
   const handleStockInSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!stockInData.medicineId) {
+      alert('Please select a valid medicine.');
+      return;
+    }
     if (!stockInData.batchNo || !stockInData.expiryDate) {
       alert('Batch number and expiry date are required.');
       return;
@@ -87,7 +109,7 @@ export const StockManagement: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setShowStockInModal(true)}
+          onClick={handleOpenStockIn}
           className="flex items-center space-x-2 bg-[#C98A7D] hover:bg-[#B5776A] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
@@ -213,11 +235,15 @@ export const StockManagement: React.FC = () => {
                   onChange={(e) => setStockInData({ ...stockInData, medicineId: e.target.value })}
                   className="w-full px-3 py-2 text-xs bg-[#FAF7F5] border border-[#E8E2DC] rounded-xl text-[#2B2420]"
                 >
-                  {medicines.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.unit})
-                    </option>
-                  ))}
+                  {medicines.length === 0 ? (
+                    <option value="" disabled>No medicines in catalog — add medicine first</option>
+                  ) : (
+                    medicines.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({m.unit})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

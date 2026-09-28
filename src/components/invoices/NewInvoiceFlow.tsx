@@ -807,15 +807,19 @@ export const NewInvoiceFlow: React.FC<NewInvoiceFlowProps> = ({
               className="px-3.5 py-2 text-xs font-bold bg-[#EFF6F2] border border-[#5B8A72]/40 text-[#5B8A72] rounded-xl"
             >
               <option value="">+ Search & Select Medicine from Stock...</option>
-              {medicines.map((m) => {
-                const medBatches = batches.filter((b) => b.medicineId === m.id && b.quantityInStock > 0);
-                const totalStock = medBatches.reduce((sum, b) => sum + b.quantityInStock, 0);
-                return (
-                  <option key={m.id} value={m.id} disabled={totalStock === 0}>
-                    {m.name} ({m.category}) — {totalStock > 0 ? `${totalStock} in stock` : 'OUT OF STOCK'}
-                  </option>
-                );
-              })}
+              {medicines.length === 0 ? (
+                <option value="" disabled>No medicines in master catalog</option>
+              ) : (
+                medicines.map((m) => {
+                  const medBatches = batches.filter((b) => b.medicineId === m.id && b.quantityInStock > 0);
+                  const totalStock = medBatches.reduce((sum, b) => sum + b.quantityInStock, 0);
+                  return (
+                    <option key={m.id} value={m.id} disabled={totalStock === 0}>
+                      {m.name} ({m.category}) — {totalStock > 0 ? `${totalStock} in stock` : 'OUT OF STOCK'}
+                    </option>
+                  );
+                })
+              )}
             </select>
           </div>
 

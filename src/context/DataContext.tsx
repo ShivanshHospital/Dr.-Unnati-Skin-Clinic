@@ -151,7 +151,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
   // Versioning for automatic cache migration across deployments (clears demo data)
-  const CURRENT_DATA_VERSION = 'v3.0_clean_production';
+  const CURRENT_DATA_VERSION = 'v4.0_clean_production';
 
   useEffect(() => {
     const savedVersion = localStorage.getItem('drunnati_app_version');
@@ -163,11 +163,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('drunnati_batches');
       localStorage.removeItem('drunnati_stx');
       localStorage.removeItem('drunnati_audit');
+      localStorage.removeItem('drunnati_medicines');
       setPatients([]);
       setInvoices([]);
       setBatches([]);
       setStockTransactions([]);
       setAuditLogs([]);
+      setMedicines([]);
       setSettings((prev) => ({
         ...prev,
         logoUrl: '/logo.png',
