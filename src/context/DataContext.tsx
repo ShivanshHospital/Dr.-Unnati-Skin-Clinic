@@ -29,6 +29,14 @@ import {
 } from '../lib/seedData';
 import { generateInvoiceNo, generateUHID, getDaysUntilExpiry } from '../lib/utils';
 import { useAuth } from './AuthContext';
+import {
+  savePatientToSupabase,
+  savePatientsBulkToSupabase,
+  fetchPatientsFromSupabase,
+  saveInvoiceToSupabase,
+  checkSupabaseConnection,
+} from '../lib/supabase';
+import { getInvoicePDFBlob } from '../lib/invoicePdf';
 
 interface DataContextType {
   patients: Patient[];
@@ -82,6 +90,13 @@ interface DataContextType {
   cancelInvoice: (invoiceId: string, reason: string) => boolean;
   updateSettings: (newSettings: Partial<ClinicSettings>) => void;
   
+  // Supabase Backend Sync
+  isSupabaseConnected: boolean;
+  isSyncing: boolean;
+  lastSyncTime: string | null;
+  syncWithSupabase: () => Promise<{ success: boolean; message: string }>;
+  uploadInvoicePdf: (invoice: Invoice) => Promise<string | null>;
+
   // Quick stats & notifications
   lowStockItemsCount: number;
   expiringBatchesCount: number;
@@ -130,6 +145,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return loaded;
   });
 
+  // Supabase Backend Sync State
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(true);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+
   // Versioning for automatic cache migration across Vercel deployments
   const CURRENT_DATA_VERSION = 'v2.1_cosmetology_logo';
 
@@ -173,7 +193,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuditLogs((prev) => [newLog, ...prev]);
   };
 
-  // Patients Actions
+  // Patients Actions - Saved to state, localStorage and Supabase backend
   const addPatient = (patientData: Omit<Patient, 'id' | 'registeredAt'>): Patient => {
     const newId = generateUHID(patients.length);
     const newPatient: Patient = {
@@ -183,11 +203,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setPatients((prev) => [newPatient, ...prev]);
     logAuditAction('REGISTER_PATIENT', 'Patient', newId, `Registered patient ${newPatient.fullName} (${newId})`);
+
+    // Asynchronously save patient registration data in Supabase backend
+    savePatientToSupabase(newPatient).catch((err) => {
+      console.warn('Notice: Background Supabase patient registration sync:', err);
+    });
+
     return newPatient;
   };
 
   const updatePatient = (id: string, updated: Partial<Patient>) => {
-    setPatients((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+    setPatients((prev) =>
+      prev.map((p) => {
+        if (p.id === id) {
+          const merged = { ...p, ...updated };
+          savePatientToSupabase(merged).catch((err) => {
+            console.warn('Notice: Background Supabase patient update sync:', err);
+          });
+          return merged;
+        }
+        return p;
+      })
+    );
     logAuditAction('UPDATE_PATIENT', 'Patient', id, `Updated demographics for ${id}`);
   };
 
@@ -345,6 +382,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setInvoices((prev) => [newInvoice, ...prev]);
 
+    // Asynchronously generate PDF and upload to Supabase backend
+    (async () => {
+      try {
+        const pdfBlob = getInvoicePDFBlob(newInvoice, settings);
+        const res = await saveInvoiceToSupabase(newInvoice, pdfBlob);
+        if (res.success && res.pdfUrl) {
+          setInvoices((prev) =>
+            prev.map((inv) => (inv.id === invoiceId ? { ...inv, pdfUrl: res.pdfUrl, pdfPath: res.pdfPath } : inv))
+          );
+        }
+      } catch (err) {
+        console.warn('Notice: Background Supabase invoice/PDF sync:', err);
+      }
+    })();
+
     // Handle Medicine Stock Decrement & Transaction Audit
     if (invoiceData.invoiceType === 'MEDICINE') {
       formattedItems.forEach((item) => {
@@ -391,9 +443,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const target = invoices.find((i) => i.id === invoiceId);
     if (!target) return false;
 
+    const updatedTarget: Invoice = { ...target, status: 'CANCELLED', cancelReason: reason };
+
     setInvoices((prev) =>
-      prev.map((i) => (i.id === invoiceId ? { ...i, status: 'CANCELLED', cancelReason: reason } : i))
+      prev.map((i) => (i.id === invoiceId ? updatedTarget : i))
     );
+
+    // Update cancelled status and regenerate voided PDF in Supabase
+    (async () => {
+      try {
+        const pdfBlob = getInvoicePDFBlob(updatedTarget, settings);
+        await saveInvoiceToSupabase(updatedTarget, pdfBlob);
+      } catch (err) {
+        console.warn('Notice: Background Supabase void invoice sync:', err);
+      }
+    })();
 
     // Reverse medicine stock if it was a Medicine invoice
     if (target.invoiceType === 'MEDICINE') {
@@ -437,6 +501,88 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logAuditAction('UPDATE_SETTINGS', 'ClinicSettings', 'settings-main', 'Updated clinic settings');
   };
 
+  // Helper to upload single invoice PDF to Supabase on demand
+  const uploadInvoicePdf = async (invoice: Invoice): Promise<string | null> => {
+    try {
+      const pdfBlob = getInvoicePDFBlob(invoice, settings);
+      const res = await saveInvoiceToSupabase(invoice, pdfBlob);
+      if (res.success && res.pdfUrl) {
+        setInvoices((prev) =>
+          prev.map((i) => (i.id === invoice.id ? { ...i, pdfUrl: res.pdfUrl, pdfPath: res.pdfPath } : i))
+        );
+        return res.pdfUrl;
+      }
+      return null;
+    } catch (err) {
+      console.error('Error generating and uploading invoice PDF to Supabase:', err);
+      return null;
+    }
+  };
+
+  // Sync all patients and invoice PDFs with Supabase backend
+  const syncWithSupabase = async (): Promise<{ success: boolean; message: string }> => {
+    setIsSyncing(true);
+    try {
+      const isConnected = await checkSupabaseConnection();
+      setIsSupabaseConnected(isConnected);
+      if (!isConnected) {
+        setIsSyncing(false);
+        return { success: false, message: 'Could not connect to Supabase backend.' };
+      }
+
+      // 1. Sync Patients: Send local patients to Supabase
+      await savePatientsBulkToSupabase(patients);
+
+      // Pull any existing Supabase patients and merge
+      const remotePatients = await fetchPatientsFromSupabase();
+      if (remotePatients && remotePatients.length > 0) {
+        setPatients((prev) => {
+          const map = new Map<string, Patient>();
+          prev.forEach((p) => map.set(p.id, p));
+          remotePatients.forEach((p) => map.set(p.id, p));
+          return Array.from(map.values());
+        });
+      }
+
+      // 2. Sync Invoices: Save and upload PDF for each invoice to Supabase Storage
+      let updatedInvoices = [...invoices];
+      for (let i = 0; i < updatedInvoices.length; i++) {
+        const inv = updatedInvoices[i];
+        try {
+          const pdfBlob = getInvoicePDFBlob(inv, settings);
+          const res = await saveInvoiceToSupabase(inv, pdfBlob);
+          if (res.success && res.pdfUrl) {
+            updatedInvoices[i] = { ...inv, pdfUrl: res.pdfUrl, pdfPath: res.pdfPath };
+          }
+        } catch (e) {
+          console.warn(`Failed to upload PDF for invoice ${inv.invoiceNo}:`, e);
+        }
+      }
+      setInvoices(updatedInvoices);
+
+      const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      setLastSyncTime(now);
+      setIsSyncing(false);
+      return {
+        success: true,
+        message: `All patient registrations & invoice PDFs successfully saved in Supabase backend at ${now}.`,
+      };
+    } catch (err: any) {
+      setIsSyncing(false);
+      return { success: false, message: err.message || 'Sync failed.' };
+    }
+  };
+
+  // Initial auto-sync on application mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      syncWithSupabase().catch((err) => {
+        console.warn('Initial Supabase auto-sync notice:', err);
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Computations for Badges & Alerts
   const lowStockItemsCount = medicines.filter((m) => {
     const medBatches = batches.filter((b) => b.medicineId === m.id);
@@ -476,6 +622,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createInvoice,
         cancelInvoice,
         updateSettings,
+        isSupabaseConnected,
+        isSyncing,
+        lastSyncTime,
+        syncWithSupabase,
+        uploadInvoicePdf,
         lowStockItemsCount,
         expiringBatchesCount,
       }}

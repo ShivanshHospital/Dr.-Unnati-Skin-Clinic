@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Invoice } from '../../types';
 import { useData } from '../../context/DataContext';
 import { formatCurrency, formatDate, numberToWordsINR } from '../../lib/utils';
-import { Printer, Download, X, AlertTriangle } from 'lucide-react';
+import { downloadInvoicePDF } from '../../lib/invoicePdf';
+import {
+  Printer,
+  Download,
+  X,
+  AlertTriangle,
+  Cloud,
+  CheckCircle2,
+  ExternalLink,
+  Loader2,
+  CloudUpload,
+} from 'lucide-react';
 
 interface PrintableInvoiceProps {
   invoice: Invoice;
@@ -10,10 +21,34 @@ interface PrintableInvoiceProps {
 }
 
 export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onClose }) => {
-  const { settings } = useData();
+  const { settings, uploadInvoicePdf } = useData();
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownload = () => {
+    downloadInvoicePDF(invoice, settings);
+  };
+
+  const handleManualUpload = async () => {
+    setIsUploading(true);
+    setUploadMessage(null);
+    try {
+      const url = await uploadInvoicePdf(invoice);
+      if (url) {
+        setUploadMessage('Successfully saved PDF to Supabase Storage!');
+      } else {
+        setUploadMessage('Upload finished.');
+      }
+    } catch {
+      setUploadMessage('Failed to upload to Supabase.');
+    } finally {
+      setIsUploading(false);
+      setTimeout(() => setUploadMessage(null), 4000);
+    }
   };
 
   const isCancelled = invoice.status === 'CANCELLED';
@@ -21,7 +56,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onC
   return (
     <div className="space-y-6">
       {/* Action Bar (Hidden when printing) */}
-      <div className="no-print bg-white p-4 rounded-2xl border border-[#E8E2DC] clinic-shadow flex items-center justify-between">
+      <div className="no-print bg-white p-4 rounded-2xl border border-[#E8E2DC] clinic-shadow flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-2">
           <span className="font-serif font-bold text-sm text-[#2B2420]">
             Invoice Preview — <span className="font-mono text-[#C98A7D]">{invoice.invoiceNo}</span>
@@ -31,16 +66,69 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onC
               CANCELLED / VOIDED
             </span>
           )}
+          {invoice.pdfUrl ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Supabase Backend Saved
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+              <Cloud className="w-3 h-3 text-amber-600" /> Pending Cloud Sync
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center flex-wrap gap-2">
+          {/* Download Official PDF */}
+          <button
+            onClick={handleDownload}
+            className="flex items-center space-x-1.5 bg-[#FAF7F5] hover:bg-[#F3EEEA] text-[#2B2420] border border-[#E8E2DC] px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            title="Download PDF to computer"
+          >
+            <Download className="w-3.5 h-3.5 text-[#C98A7D]" />
+            <span>Download PDF</span>
+          </button>
+
+          {/* Open in Supabase Cloud Storage */}
+          {invoice.pdfUrl ? (
+            <a
+              href={invoice.pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              title="Open cloud PDF in new tab"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>View Cloud PDF</span>
+            </a>
+          ) : (
+            <button
+              onClick={handleManualUpload}
+              disabled={isUploading}
+              className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <CloudUpload className="w-3.5 h-3.5" />
+                  <span>Save to Supabase</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Print Invoice */}
           <button
             onClick={handlePrint}
-            className="flex items-center space-x-2 bg-[#C98A7D] hover:bg-[#B5776A] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 bg-[#C98A7D] hover:bg-[#B5776A] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Print Invoice (A4 / Thermal)</span>
+            <span>Print Invoice (A4)</span>
           </button>
+
           {onClose && (
             <button
               onClick={onClose}
@@ -50,6 +138,12 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onC
             </button>
           )}
         </div>
+
+        {uploadMessage && (
+          <div className="w-full text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+            {uploadMessage}
+          </div>
+        )}
       </div>
 
       {/* PRINTABLE BILL CANVAS (A4 Format) */}

@@ -9,10 +9,15 @@ import {
   PlusCircle,
   AlertTriangle,
   FileSpreadsheet,
+  RefreshCw,
+  Cloud,
+  CheckCircle2,
+  ExternalLink,
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import { downloadInvoicePDF } from '../../lib/invoicePdf';
 import { Invoice, InvoiceType, PaymentStatus } from '../../types';
 
 interface InvoiceListProps {
@@ -21,8 +26,17 @@ interface InvoiceListProps {
 }
 
 export const InvoiceList: React.FC<InvoiceListProps> = ({ onViewInvoice, onOpenNewInvoice }) => {
-  const { invoices, cancelInvoice } = useData();
+  const { invoices, cancelInvoice, isSyncing, lastSyncTime, syncWithSupabase, settings } = useData();
   const { hasPermission } = useAuth();
+
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
+  const handleManualSync = async () => {
+    setSyncFeedback(null);
+    const res = await syncWithSupabase();
+    setSyncFeedback(res.message);
+    setTimeout(() => setSyncFeedback(null), 5000);
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('ALL');
@@ -117,7 +131,16 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onViewInvoice, onOpenN
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            className="flex items-center space-x-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+            title="Save and backup all invoices and PDFs to Supabase backend"
+          >
+            <RefreshCw className={`w-4 h-4 text-emerald-600 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>{isSyncing ? 'Syncing...' : 'Sync Supabase Backend'}</span>
+          </button>
           <button
             onClick={handleExportCSV}
             className="flex items-center space-x-2 bg-[#FAF7F5] hover:bg-[#E8E2DC] text-[#2B2420] border border-[#E8E2DC] px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
@@ -134,6 +157,21 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onViewInvoice, onOpenN
           </button>
         </div>
       </div>
+
+      {syncFeedback && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>{syncFeedback}</span>
+          </div>
+          <button
+            onClick={() => setSyncFeedback(null)}
+            className="text-emerald-700 hover:text-emerald-900 font-bold px-2 py-0.5"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Filters Bar */}
       <div className="bg-white p-4 rounded-2xl border border-[#E8E2DC] clinic-shadow grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -260,14 +298,34 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onViewInvoice, onOpenN
                       )}
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <div className="flex items-center justify-center space-x-2">
+                      <div className="flex items-center justify-center space-x-1.5">
                         <button
                           onClick={() => onViewInvoice(inv)}
                           className="px-2.5 py-1.5 rounded-lg bg-[#FAF7F5] border border-[#E8E2DC] text-[#2B2420] hover:bg-[#C98A7D] hover:text-white transition-all font-semibold flex items-center gap-1 text-[11px]"
                           title="View & Print Bill"
                         >
-                          <Eye className="w-3.5 h-3.5" /> View / Print
+                          <Eye className="w-3.5 h-3.5" /> View
                         </button>
+
+                        <button
+                          onClick={() => downloadInvoicePDF(inv, settings)}
+                          className="p-1.5 rounded-lg bg-[#FAF7F5] border border-[#E8E2DC] text-[#7C7067] hover:bg-[#C98A7D] hover:text-white transition-all cursor-pointer"
+                          title="Download PDF directly"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+
+                        {inv.pdfUrl && (
+                          <a
+                            href={inv.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all"
+                            title="Open Cloud PDF (Supabase Storage)"
+                          >
+                            <Cloud className="w-3.5 h-3.5" />
+                          </a>
+                        )}
 
                         {inv.status === 'ACTIVE' && hasPermission('cancel_invoice') && (
                           <button

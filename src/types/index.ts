@@ -139,6 +139,8 @@ export interface Invoice {
   creatorName: string;
   cancelReason?: string;
   notes?: string;
+  pdfUrl?: string;
+  pdfPath?: string;
 }
 
 export interface AuditLog {

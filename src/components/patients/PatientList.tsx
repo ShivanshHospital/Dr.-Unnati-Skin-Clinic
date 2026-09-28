@@ -14,6 +14,8 @@ import {
   Edit2,
   CheckCircle,
   AlertTriangle,
+  RefreshCw,
+  Cloud,
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { Patient } from '../../types';
@@ -28,8 +30,9 @@ export const PatientList: React.FC<PatientListProps> = ({
   onSelectPatient,
   onOpenNewInvoiceForPatient,
 }) => {
-  const { patients, addPatient, updatePatient } = useData();
+  const { patients, addPatient, updatePatient, isSyncing, syncWithSupabase } = useData();
 
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
@@ -134,14 +137,46 @@ export const PatientList: React.FC<PatientListProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className="flex items-center space-x-2 bg-[#C98A7D] hover:bg-[#B5776A] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Register New Patient</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={async () => {
+              setSyncNotice(null);
+              const res = await syncWithSupabase();
+              setSyncNotice(res.message);
+              setTimeout(() => setSyncNotice(null), 5000);
+            }}
+            disabled={isSyncing}
+            className="flex items-center space-x-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+            title="Sync all patient data with Supabase backend"
+          >
+            <RefreshCw className={`w-4 h-4 text-emerald-600 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>{isSyncing ? 'Syncing...' : 'Sync with Supabase'}</span>
+          </button>
+
+          <button
+            onClick={handleOpenCreate}
+            className="flex items-center space-x-2 bg-[#C98A7D] hover:bg-[#B5776A] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Register New Patient</span>
+          </button>
+        </div>
       </div>
+
+      {syncNotice && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Cloud className="w-4 h-4 text-emerald-600" />
+            <span>{syncNotice}</span>
+          </div>
+          <button
+            onClick={() => setSyncNotice(null)}
+            className="text-emerald-700 hover:text-emerald-900 font-bold px-2 py-0.5"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Search & Filter Control */}
       <div className="bg-white p-4 rounded-2xl border border-[#E8E2DC] clinic-shadow flex items-center gap-4">
