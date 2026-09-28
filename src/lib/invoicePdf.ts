@@ -17,15 +17,14 @@ function formatPdfCurrency(amount: number): string {
 }
 
 /**
- * Generates an official, high-resolution A4 jsPDF document for an invoice
+ * Renders a single invoice onto the current page of a jsPDF document
  */
-export function generateInvoicePDF(invoice: Invoice, settings: ClinicSettings): jsPDF {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4',
-  });
-
+export function renderInvoicePage(
+  doc: jsPDF,
+  invoice: Invoice,
+  settings: ClinicSettings,
+  referralDoctor?: string
+): void {
   const pageWidth = 210;
   const pageHeight = 297;
   const margin = 14;
@@ -109,10 +108,11 @@ export function generateInvoicePDF(invoice: Invoice, settings: ClinicSettings): 
   y += 4;
 
   // Patient & Doctor Information Box
+  const infoBoxHeight = referralDoctor ? 26 : 23;
   doc.setFillColor(250, 247, 245);
   doc.setDrawColor(232, 226, 220);
   doc.setLineWidth(0.2);
-  doc.roundedRect(margin, y, contentWidth, 23, 2, 2, 'FD');
+  doc.roundedRect(margin, y, contentWidth, infoBoxHeight, 2, 2, 'FD');
 
   // Billed to
   doc.setFont('helvetica', 'bold');
@@ -135,6 +135,16 @@ export function generateInvoicePDF(invoice: Invoice, settings: ClinicSettings): 
   ].filter(Boolean).join('   |   ');
   doc.text(patientDetails, margin + 4, y + 15.5);
 
+  if (referralDoctor) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(100, 90, 85);
+    doc.text(`Referred by: `, margin + 4, y + 20.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(201, 138, 125);
+    doc.text(referralDoctor, margin + 22, y + 20.5);
+  }
+
   // Attending Doctor
   const docColX = margin + 110;
   doc.setFont('helvetica', 'bold');
@@ -153,10 +163,9 @@ export function generateInvoicePDF(invoice: Invoice, settings: ClinicSettings): 
   doc.text('Cosmetologist & Aesthetic Care', docColX, y + 14.5);
   doc.text(`Billed by: ${invoice.creatorName || 'Clinic Reception'}`, docColX, y + 18.5);
 
-  y += 28;
+  y += infoBoxHeight + 5;
 
   // Table Columns
-  // Col positions
   const colX = {
     idx: margin + 2,
     desc: margin + 12,
@@ -256,7 +265,6 @@ export function generateInvoicePDF(invoice: Invoice, settings: ClinicSettings): 
 
   // Right side: Totals Calculation
   const totalsX = margin + 105;
-  const totalsWidth = contentWidth - 105;
   const labelX = totalsX;
   const valX = pageWidth - margin - 3;
 
@@ -330,23 +338,115 @@ export function generateInvoicePDF(invoice: Invoice, settings: ClinicSettings): 
   doc.setFontSize(6.5);
   doc.setTextColor(120, 110, 100);
   doc.text('For Dr. Unnati Skin Clinic', sigX + 22.5, footerY + 24.5, { align: 'center' });
+}
 
+/**
+ * Generates an official, high-resolution A4 jsPDF document for an invoice
+ */
+export function generateInvoicePDF(
+  invoice: Invoice,
+  settings: ClinicSettings,
+  referralDoctor?: string
+): jsPDF {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  renderInvoicePage(doc, invoice, settings, referralDoctor);
   return doc;
 }
 
 /**
  * Returns the PDF document as a Blob for uploading to Supabase Storage
  */
-export function getInvoicePDFBlob(invoice: Invoice, settings: ClinicSettings): Blob {
-  const doc = generateInvoicePDF(invoice, settings);
+export function getInvoicePDFBlob(
+  invoice: Invoice,
+  settings: ClinicSettings,
+  referralDoctor?: string
+): Blob {
+  const doc = generateInvoicePDF(invoice, settings, referralDoctor);
   return doc.output('blob');
 }
 
 /**
  * Triggers a browser download of the invoice PDF
  */
-export function downloadInvoicePDF(invoice: Invoice, settings: ClinicSettings): void {
-  const doc = generateInvoicePDF(invoice, settings);
+export function downloadInvoicePDF(
+  invoice: Invoice,
+  settings: ClinicSettings,
+  referralDoctor?: string
+): void {
+  const doc = generateInvoicePDF(invoice, settings, referralDoctor);
   const cleanInvoiceNo = invoice.invoiceNo.replace(/[^a-zA-Z0-9-_]/g, '_');
   doc.save(`${cleanInvoiceNo}.pdf`);
+}
+
+/**
+ * Generates a single consolidated PDF document containing multiple invoices (one invoice per page)
+ */
+export function generateMultipleInvoicesPDF(
+  invoices: Invoice[],
+  settings: ClinicSettings,
+  referralMap?: Record<string, string>
+): jsPDF {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  invoices.forEach((inv, index) => {
+    if (index > 0) {
+      doc.addPage('a4', 'portrait');
+    }
+    const refDoc = referralMap
+      ? referralMap[inv.patientUHID || ''] || referralMap[inv.patientId || '']
+      : undefined;
+    renderInvoicePage(doc, inv, settings, refDoc);
+  });
+
+  return doc;
+}
+
+/**
+ * Downloads a combined multi-page PDF containing all specified invoices
+ */
+export function downloadMultipleInvoicesPDF(
+  invoices: Invoice[],
+  settings: ClinicSettings,
+  filename?: string,
+  referralMap?: Record<string, string>
+): void {
+  if (invoices.length === 0) return;
+  const doc = generateMultipleInvoicesPDF(invoices, settings, referralMap);
+  const dateStr = new Date().toISOString().split('T')[0];
+  const finalFilename = filename || `Dr_Unnati_Clinic_Invoices_Combined_${dateStr}.pdf`;
+  doc.save(finalFilename);
+}
+
+/**
+ * Sequentially triggers individual PDF downloads for a list of invoices with a small delay
+ * to avoid browser pop-up blocks, while reporting progress
+ */
+export async function downloadInvoicesIndividually(
+  invoices: Invoice[],
+  settings: ClinicSettings,
+  referralMap?: Record<string, string>,
+  onProgress?: (current: number, total: number) => void
+): Promise<void> {
+  for (let i = 0; i < invoices.length; i++) {
+    const inv = invoices[i];
+    const refDoc = referralMap
+      ? referralMap[inv.patientUHID || ''] || referralMap[inv.patientId || '']
+      : undefined;
+    downloadInvoicePDF(inv, settings, refDoc);
+    if (onProgress) {
+      onProgress(i + 1, invoices.length);
+    }
+    if (i < invoices.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  }
 }
